@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Run pending migrations, then restart the running Puma dev server so it reloads
+# the database schema. Without this, a long-running server keeps a stale column
+# cache and INSERT/UPDATE statements silently drop newly-added columns.
+#
+# Usage (inside the dev container):
+#   docker compose exec web bin/migrate
+#   docker compose exec web bin/migrate VERSION=20260101000000   # extra args pass through
+set -e
+
+bin/rails db:migrate "$@"
+
+pid_file="tmp/pids/server.pid"
+if [ -f "$pid_file" ] && kill -0 "$(cat "$pid_file")" 2>/dev/null; then
+  kill -USR2 "$(cat "$pid_file")"
+  echo "→ Restarted Puma (pid $(cat "$pid_file")) so it picks up the new schema."
+else
+  echo "→ No running Puma server detected; it will load the fresh schema on next start."
+fi

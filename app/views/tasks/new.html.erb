@@ -1,0 +1,16 @@
+<% content_for :title, "New task" %>
+
+<header class="page-header">
+  <h1>New task</h1>
+  <%= link_to "← Back to tasks", tasks_path %>
+</header>
+
+<div id="task-form-app"
+     data-url="<%= tasks_path %>"
+     data-method="post"
+     data-submit-label="Create task"
+     data-csrf="<%= form_authenticity_token %>">
+  <noscript>
+    <%= render "form", task: @task %>
+  </noscript>
+</div>

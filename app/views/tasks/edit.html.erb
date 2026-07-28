@@ -1,0 +1,19 @@
+<% content_for :title, "Edit task" %>
+
+<header class="page-header">
+  <h1>Edit task</h1>
+  <%= link_to "← Back to tasks", tasks_path %>
+</header>
+
+<div id="task-form-app"
+     data-url="<%= task_path(@task) %>"
+     data-method="patch"
+     data-submit-label="Save changes"
+     data-csrf="<%= form_authenticity_token %>"
+     data-title="<%= @task.title %>"
+     data-description="<%= @task.description %>"
+     data-complete-by="<%= datetime_local_value(@task.complete_by) %>">
+  <noscript>
+    <%= render "form", task: @task %>
+  </noscript>
+</div>

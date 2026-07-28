@@ -1,0 +1,33 @@
+<%# Plain Rails fallback used when JavaScript is disabled. %>
+<%= form_with model: task, class: "card" do |form| %>
+  <% if task.errors.any? %>
+    <div class="error">
+      <h2><%= pluralize(task.errors.count, "error") %> prevented this task from being saved:</h2>
+      <ul>
+        <% task.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :title %> *
+    <%= form.text_field :title %>
+  </div>
+
+  <div class="field">
+    <%= form.label :description %>
+    <%= form.text_area :description, rows: 4 %>
+  </div>
+
+  <div class="field">
+    <%= form.label :complete_by, "Complete by" %> *
+    <%= form.datetime_field :complete_by %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit %>
+    <%= link_to "Cancel", tasks_path %>
+  </div>
+<% end %>

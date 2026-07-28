@@ -7,6 +7,10 @@ class Task < ApplicationRecord
 
   scope :pending, -> { where(completed_at: nil) }
   scope :completed, -> { where.not(completed_at: nil) }
+  scope :overdue, -> { pending.where(complete_by: ...Time.current) }
+  scope :due_by_end_of_today, -> { where(complete_by: ..Time.current.end_of_day) }
+  scope :by_deadline, -> { order(complete_by: :asc) }
+  scope :search, ->(term) { where("title ILIKE :q OR description ILIKE :q", q: "%#{term}%") }
 
   def completed?
     completed_at.present?

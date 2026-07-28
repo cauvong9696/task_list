@@ -22,4 +22,23 @@ module TasksHelper
   def datetime_local_value(time)
     time&.strftime("%Y-%m-%dT%H:%M")
   end
+
+  # Build a tasks_path preserving the current query params with overrides.
+  # Pass a nil value to drop a param (e.g. page: nil resets pagination).
+  def tasks_url_with(overrides)
+    params = request.query_parameters.symbolize_keys.merge(overrides)
+    tasks_path(params.compact)
+  end
+
+  FILTER_LABELS = {
+    "all" => "All",
+    "today" => "Due today",
+    "overdue" => "Overdue",
+    "pending" => "Pending",
+    "completed" => "Completed"
+  }.freeze
+
+  def filter_label(key)
+    FILTER_LABELS.fetch(key, key.to_s.titleize)
+  end
 end

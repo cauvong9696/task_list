@@ -9,7 +9,10 @@
      data-url="<%= tasks_path %>"
      data-method="post"
      data-submit-label="Create task"
-     data-csrf="<%= form_authenticity_token %>">
+     data-csrf="<%= form_authenticity_token %>"
+     data-title="<%= @task.title %>"
+     data-description="<%= @task.description %>"
+     data-complete-by="<%= datetime_local_value(@task.complete_by) %>">
   <noscript>
     <%= render "form", task: @task %>
   </noscript>

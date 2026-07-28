@@ -64,13 +64,17 @@ button.button-danger {
   border-color: var(--danger);
 }
 
-.link-danger {
+.link-danger,
+.link-action {
   background: none;
   border: none;
-  color: var(--danger);
   padding: 0;
   text-decoration: underline;
+  font: inherit;
+  cursor: pointer;
 }
+.link-danger { color: var(--danger); }
+.link-action { color: var(--accent); }
 
 /* Cards & forms */
 .card {

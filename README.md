@@ -10,9 +10,14 @@ No need to install Ruby, PostgreSQL, etc. directly on your machine — everythin
 
 ## Running the development environment (Docker)
 
+A `Makefile` wraps the common Docker/Rails commands. Run `make help` to see all
+available targets. (The raw `docker compose ...` equivalents still work if you
+prefer them.)
+
 ```bash
 # Build the image and start web + database
-docker compose up --build
+make build
+make up
 ```
 
 The first run automatically installs gems, then creates and migrates the database.
@@ -22,39 +27,42 @@ Other common commands:
 
 ```bash
 # Start in the background
-docker compose up -d
+make upd
 
 # Follow logs
-docker compose logs -f web
+make logs
 
 # Stop (keep database data)
-docker compose down
+make down
 
 # Stop and REMOVE database data
-docker compose down -v
+make clean
 ```
 
 ### Running commands inside the container
 
 ```bash
 # Open a shell in the web container
-docker compose exec web bash
+make shell
 
-# Run rails/rake commands
-docker compose exec web bin/rails console
-docker compose exec web bin/rails db:migrate
+# Open a Rails console
+make console
 
-# Run the test suite
-docker compose exec web bin/rails test
+# Run pending migrations
+make migrate
 
-# Install new gems after editing the Gemfile
-docker compose exec web bundle install
-# or rebuild the image:
-docker compose build web
+# Run the test suite (prepares the test DB first)
+make test
 
-# Run ci tests (lint, typecheck, test)
-docker compose exec web bin/ci
+# Install new gems after editing the Gemfile: rebuild the image
+make build
+
+# Run the full CI suite (lint, security, test)
+make ci
 ```
+
+> Prefer plain Docker? The same actions are, e.g., `docker compose up --build`,
+> `docker compose exec web bin/rails console`, and `docker compose exec web bin/ci`.
 
 ## Docker file overview
 

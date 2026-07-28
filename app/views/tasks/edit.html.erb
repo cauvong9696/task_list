@@ -9,10 +9,12 @@
      data-url="<%= task_path(@task) %>"
      data-method="patch"
      data-submit-label="Save changes"
+     data-cancel-url="<%= task_path(@task) %>"
      data-csrf="<%= form_authenticity_token %>"
      data-title="<%= @task.title %>"
      data-description="<%= @task.description %>"
-     data-complete-by="<%= datetime_local_value(@task.complete_by) %>">
+     data-complete-by="<%= datetime_local_value(@task.complete_by) %>"
+     data-files="<%= attachments_payload(@task).to_json %>">
   <noscript>
     <%= render "form", task: @task %>
   </noscript>

@@ -16,9 +16,32 @@
       Pending
     <% end %>
   </p>
-  <p><strong>Description:</strong> <%= @task.description.presence || "(no description)" %></p>
+  <div class="description">
+    <strong>Description:</strong>
+    <% if @task.description.present? %>
+      <div class="markdown-body"><%= render_markdown(@task.description) %></div>
+    <% else %>
+      <span class="muted">(no description)</span>
+    <% end %>
+  </div>
   <p><strong>Complete by:</strong> <%= @task.complete_by.strftime("%b %-d, %Y at %I:%M %p") %></p>
   <p><strong>Created:</strong> <%= @task.created_at.strftime("%b %-d, %Y at %I:%M %p") %></p>
+
+  <div>
+    <strong>Supporting files:</strong>
+    <% if @task.supporting_files.attached? %>
+      <ul class="attachment-list">
+        <% @task.supporting_files.each do |file| %>
+          <li>
+            <%= link_to file.filename, rails_blob_path(file, only_path: true), target: "_blank", rel: "noopener" %>
+            <span class="attachment-size">(<%= number_to_human_size(file.byte_size) %>)</span>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <span class="muted">(none)</span>
+    <% end %>
+  </div>
 
   <div class="actions">
     <%= button_to @task.completed? ? "Mark as pending" : "Mark as complete", toggle_task_path(@task), method: :patch %>

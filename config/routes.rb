@@ -15,6 +15,9 @@ Rails.application.routes.draw do
     end
   end
 
+  # Live Markdown preview for the description field.
+  post "markdown_preview", to: "markdown#preview"
+
   # Defines the root path route ("/")
   root "tasks#index"
 end

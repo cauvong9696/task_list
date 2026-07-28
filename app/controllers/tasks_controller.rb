@@ -43,6 +43,7 @@ class TasksController < ApplicationController
 
   def create
     @task = Task.new(task_params)
+    @task.supporting_files.attach(uploaded_files) if uploaded_files.any?
 
     if @task.save
       redirect_to @task, notice: "Task was successfully created."
@@ -55,7 +56,12 @@ class TasksController < ApplicationController
   end
 
   def update
-    if @task.update(task_params)
+    # Files are appended (not replaced) and removals are handled explicitly, so
+    # editing text fields never wipes existing attachments.
+    @task.assign_attributes(task_params)
+    @task.supporting_files.attach(uploaded_files) if uploaded_files.any?
+    purge_files(params.dig(:task, :remove_file_ids))
+    if @task.save
       redirect_to @task, notice: "Task was successfully updated."
     else
       render :edit, status: :unprocessable_entity
@@ -118,5 +124,18 @@ class TasksController < ApplicationController
 
   def task_params
     params.require(:task).permit(:title, :description, :complete_by)
+  end
+
+  # Uploaded files from the multipart form (blank entries filtered out).
+  def uploaded_files
+    @uploaded_files ||= Array(params.dig(:task, :supporting_files)).reject(&:blank?)
+  end
+
+  # Purge the attachments whose ids were checked for removal on the edit form.
+  def purge_files(ids)
+    ids = Array(ids).map(&:to_s).reject(&:blank?)
+    return if ids.empty?
+
+    @task.supporting_files.each { |file| file.purge_later if ids.include?(file.id.to_s) }
   end
 end

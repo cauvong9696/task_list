@@ -1,6 +1,8 @@
 require "test_helper"
 
 class TasksControllerTest < ActionDispatch::IntegrationTest
+  include ActiveJob::TestHelper
+
   setup { @task = tasks(:pending_future) }
 
   test "index lists tasks" do
@@ -88,6 +90,28 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", @task.title
   end
 
+  test "show renders the description as Markdown" do
+    @task.update!(description: "# Heading\n\n- a **bold** item")
+    get task_url(@task)
+    assert_select ".markdown-body h1", "Heading"
+    assert_select ".markdown-body li strong", "bold"
+  end
+
+  test "show sanitizes dangerous markup in the description" do
+    @task.update!(description: "Hi <script>alert('xss')</script>")
+    get task_url(@task)
+    rendered = css_select(".markdown-body").first.to_html
+    assert_no_match(/<script/, rendered)
+  end
+
+  test "markdown_preview returns sanitized html" do
+    post markdown_preview_url, params: { text: "# Hi\n\n<script>alert('x')</script>" }, as: :json
+    assert_response :success
+    html = response.parsed_body["html"]
+    assert_match %r{<h1>Hi</h1>}, html
+    assert_no_match(/<script/, html)
+  end
+
   test "show redirects when task is missing" do
     get task_url(id: 0)
     assert_redirected_to tasks_url
@@ -122,6 +146,44 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_select "#task-form-app[data-title='']"
   end
 
+  test "creates a task with supporting files attached" do
+    post tasks_url, params: { task: {
+      title: "With attachment", complete_by: 2.days.from_now,
+      supporting_files: [ fixture_file_upload("sample.txt", "text/plain") ]
+    } }
+    assert_redirected_to task_url(Task.last)
+    assert Task.last.supporting_files.attached?
+    assert_equal "sample.txt", Task.last.supporting_files.first.filename.to_s
+  end
+
+  test "update appends new files and keeps existing ones" do
+    attach_file(@task, "existing.txt")
+    assert_equal 1, @task.supporting_files.count
+
+    patch task_url(@task), params: { task: {
+      supporting_files: [ fixture_file_upload("sample.txt", "text/plain") ]
+    } }
+    assert_redirected_to task_url(@task)
+    assert_equal 2, @task.reload.supporting_files.count
+  end
+
+  test "update purges files marked for removal" do
+    attach_file(@task, "remove_me.txt")
+    file = @task.supporting_files.first
+
+    perform_enqueued_jobs do
+      patch task_url(@task), params: { task: { remove_file_ids: [ file.id ] } }
+    end
+    assert_not @task.reload.supporting_files.attached?
+  end
+
+  test "editing text fields does not drop existing attachments" do
+    attach_file(@task, "keep.txt")
+    patch task_url(@task), params: { task: { title: "Renamed" } }
+    assert_equal "Renamed", @task.reload.title
+    assert_equal 1, @task.supporting_files.count
+  end
+
   test "destroys a task" do
     assert_difference("Task.count", -1) do
       delete task_url(@task)
@@ -130,6 +192,12 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+  def attach_file(task, filename)
+    task.supporting_files.attach(
+      io: StringIO.new("content"), filename: filename, content_type: "text/plain"
+    )
+  end
 
   # The Vue list receives its initial state as JSON on the mount point.
   def rendered_initial

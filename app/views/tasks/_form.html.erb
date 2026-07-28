@@ -17,8 +17,8 @@
   </div>
 
   <div class="field">
-    <%= form.label :description %>
-    <%= form.text_area :description, rows: 4 %>
+    <%= form.label :description %> <span class="hint">(Markdown supported)</span>
+    <%= form.text_area :description, rows: 6 %>
   </div>
 
   <div class="field">
@@ -26,8 +26,31 @@
     <%= form.datetime_field :complete_by %>
   </div>
 
+  <div class="field">
+    <%= form.label :supporting_files, "Supporting files" %>
+    <%= form.file_field :supporting_files, multiple: true %>
+  </div>
+
+  <% if task.supporting_files.attached? %>
+    <div class="field">
+      <label>Attached files</label>
+      <ul class="attachment-list">
+        <% task.supporting_files.each do |file| %>
+          <li>
+            <label class="attachment-remove">
+              <%= check_box_tag "task[remove_file_ids][]", file.id, false, id: nil %>
+              Remove
+            </label>
+            <%= link_to file.filename, rails_blob_path(file, only_path: true), target: "_blank", rel: "noopener" %>
+            <span class="attachment-size">(<%= number_to_human_size(file.byte_size) %>)</span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
   <div class="actions">
     <%= form.submit %>
-    <%= link_to "Cancel", tasks_path %>
+    <%= link_to "Cancel", (task.persisted? ? task : tasks_path) %>
   </div>
 <% end %>

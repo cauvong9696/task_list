@@ -1,4 +1,6 @@
 class Task < ApplicationRecord
+  has_many_attached :supporting_files
+
   normalizes :title, with: ->(value) { value.strip }
   normalizes :description, with: ->(value) { value.strip }
 

@@ -146,7 +146,6 @@ const TaskList = {
           </label>
           <div class="task-body">
             <a :href="'/tasks/' + task.id" class="task-title">{{ task.title }}</a>
-            <p v-if="task.description" class="task-desc">{{ task.description }}</p>
             <p class="task-meta">
               <span>Complete by {{ task.complete_by }}</span>
               <span v-if="task.overdue" class="badge-overdue">Overdue</span>

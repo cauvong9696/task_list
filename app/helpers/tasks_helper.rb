@@ -5,7 +5,6 @@ module TasksHelper
     {
       id: task.id,
       title: task.title,
-      description: task.description.to_s,
       complete_by: task.complete_by.strftime("%b %-d, %Y at %I:%M %p"),
       completed: task.completed?,
       overdue: task.overdue?,
@@ -21,6 +20,26 @@ module TasksHelper
   # Value for an HTML datetime-local input.
   def datetime_local_value(time)
     time&.strftime("%Y-%m-%dT%H:%M")
+  end
+
+  # Render a Markdown string to sanitized HTML for display.
+  def render_markdown(text)
+    return "" if text.blank?
+
+    html = Kramdown::Document.new(text, auto_ids: false).to_html
+    sanitize(html)
+  end
+
+  # Attached files serialized for the Vue form (id, name, download url, size).
+  def attachments_payload(task)
+    task.supporting_files.map do |file|
+      {
+        id: file.id,
+        name: file.filename.to_s,
+        url: rails_blob_path(file, only_path: true),
+        size: number_to_human_size(file.byte_size)
+      }
+    end
   end
 
   # Build a tasks_path preserving the current query params with overrides.

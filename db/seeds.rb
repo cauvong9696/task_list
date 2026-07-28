@@ -7,3 +7,16 @@
 #   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
+
+# Starter users for development/testing. Add real users via the Rails console:
+#   User.create!(email: "person@boardpackager.com", password: "a-good-password")
+#   User.create!(email: "boss@boardpackager.com", password: "...", admin: true)
+if Rails.env.local?
+  User.find_or_create_by!(email: "demo@boardpackager.com") do |user|
+    user.password = "password"
+  end
+  User.find_or_create_by!(email: "admin@boardpackager.com") do |user|
+    user.password = "password"
+    user.admin = true
+  end
+end

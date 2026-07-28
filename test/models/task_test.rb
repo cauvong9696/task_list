@@ -1,31 +1,39 @@
 require "test_helper"
 
 class TaskTest < ActiveSupport::TestCase
+  setup { @user = users(:alice) }
+
   test "is valid with a title and complete_by" do
-    task = Task.new(title: "Write docs", complete_by: 1.day.from_now)
+    task = @user.tasks.build(title: "Write docs", complete_by: 1.day.from_now)
     assert task.valid?
   end
 
+  test "requires a user" do
+    task = Task.new(title: "Orphan", complete_by: 1.day.from_now)
+    assert_not task.valid?
+    assert_includes task.errors[:user], "must exist"
+  end
+
   test "strips whitespace from title and description before saving" do
-    task = Task.create!(title: "  Write docs  ", description: "  details  ", complete_by: 1.day.from_now)
+    task = @user.tasks.create!(title: "  Write docs  ", description: "  details  ", complete_by: 1.day.from_now)
     assert_equal "Write docs", task.title
     assert_equal "details", task.description
   end
 
   test "rejects a title that is only whitespace" do
-    task = Task.new(title: "   ", complete_by: 1.day.from_now)
+    task = @user.tasks.build(title: "   ", complete_by: 1.day.from_now)
     assert_not task.valid?
     assert_includes task.errors[:title], "can't be blank"
   end
 
   test "requires a title" do
-    task = Task.new(complete_by: 1.day.from_now)
+    task = @user.tasks.build(complete_by: 1.day.from_now)
     assert_not task.valid?
     assert_includes task.errors[:title], "can't be blank"
   end
 
   test "requires a complete_by" do
-    task = Task.new(title: "No deadline")
+    task = @user.tasks.build(title: "No deadline")
     assert_not task.valid?
     assert_includes task.errors[:complete_by], "can't be blank"
   end

@@ -30,11 +30,11 @@ class TasksController < ApplicationController
   end
 
   def new
-    @task = Task.new
+    @task = current_user.tasks.new
 
     # "Copy" opens this form pre-filled from an existing task; nothing is saved
     # until the user submits.
-    if (source = Task.find_by(id: params[:copy_from]))
+    if (source = manageable_tasks.find_by(id: params[:copy_from]))
       @task.title = "#{source.title} (copy)"
       @task.description = source.description
       @task.complete_by = source.complete_by
@@ -42,7 +42,7 @@ class TasksController < ApplicationController
   end
 
   def create
-    @task = Task.new(task_params)
+    @task = current_user.tasks.new(task_params)
     @task.supporting_files.attach(uploaded_files) if uploaded_files.any?
 
     if @task.save
@@ -95,29 +95,37 @@ class TasksController < ApplicationController
     }
   end
 
+  # Admins manage every task; regular users only their own.
+  def manageable_tasks
+    current_user.admin? ? Task.all : current_user.tasks
+  end
+
   def filtered_scope(filter)
+    scope = manageable_tasks
     case filter
-    when "today"     then Task.due_by_end_of_today
-    when "overdue"   then Task.overdue
-    when "pending"   then Task.pending
-    when "completed" then Task.completed
-    else Task.all
+    when "today"     then scope.due_by_end_of_today
+    when "overdue"   then scope.overdue
+    when "pending"   then scope.pending
+    when "completed" then scope.completed
+    else scope
     end
   end
 
   # Totals per filter for the tab badges (independent of the current search).
   def filter_counts
+    tasks = manageable_tasks
     {
-      "all" => Task.count,
-      "today" => Task.due_by_end_of_today.count,
-      "overdue" => Task.overdue.count,
-      "pending" => Task.pending.count,
-      "completed" => Task.completed.count
+      "all" => tasks.count,
+      "today" => tasks.due_by_end_of_today.count,
+      "overdue" => tasks.overdue.count,
+      "pending" => tasks.pending.count,
+      "completed" => tasks.completed.count
     }
   end
 
+  # Scoped so a regular user can only reach their own tasks; an admin any task.
   def set_task
-    @task = Task.find(params[:id])
+    @task = manageable_tasks.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     redirect_to tasks_path, alert: "Task not found."
   end

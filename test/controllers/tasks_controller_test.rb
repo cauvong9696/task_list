@@ -1,8 +1,6 @@
 require "test_helper"
 
 class TasksControllerTest < ActionDispatch::IntegrationTest
-  include ActiveJob::TestHelper
-
   setup do
     @user = users(:alice)
     sign_in_as(@user)
@@ -212,14 +210,28 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, @task.reload.supporting_files.count
   end
 
-  test "update purges files marked for removal" do
+  test "removing an attachment deletes its blob and stored file immediately" do
     attach_file(@task, "remove_me.txt")
     file = @task.supporting_files.first
+    blob = file.blob
+    assert ActiveStorage::Blob.service.exist?(blob.key)
 
-    perform_enqueued_jobs do
+    assert_difference([ "ActiveStorage::Attachment.count", "ActiveStorage::Blob.count" ], -1) do
       patch task_url(@task), params: { task: { remove_file_ids: [ file.id ] } }
     end
     assert_not @task.reload.supporting_files.attached?
+    assert_not ActiveStorage::Blob.service.exist?(blob.key), "file should be gone from storage"
+  end
+
+  test "deleting a task purges its attachments and stored files immediately" do
+    attach_file(@task, "a.txt")
+    attach_file(@task, "b.txt")
+    keys = @task.supporting_files.map { |f| f.blob.key }
+
+    assert_difference([ "ActiveStorage::Attachment.count", "ActiveStorage::Blob.count" ], -2) do
+      delete task_url(@task)
+    end
+    keys.each { |key| assert_not ActiveStorage::Blob.service.exist?(key) }
   end
 
   test "editing text fields does not drop existing attachments" do

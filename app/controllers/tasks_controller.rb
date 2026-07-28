@@ -140,10 +140,11 @@ class TasksController < ApplicationController
   end
 
   # Purge the attachments whose ids were checked for removal on the edit form.
+  # Synchronous purge removes the blob record and the file on disk right away.
   def purge_files(ids)
     ids = Array(ids).map(&:to_s).reject(&:blank?)
     return if ids.empty?
 
-    @task.supporting_files.each { |file| file.purge_later if ids.include?(file.id.to_s) }
+    @task.supporting_files.each { |file| file.purge if ids.include?(file.id.to_s) }
   end
 end

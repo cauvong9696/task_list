@@ -1,8 +1,29 @@
 class TasksController < ApplicationController
+  PER_PAGE = 10
+  FILTERS = %w[all today overdue pending completed].freeze
+
   before_action :set_task, only: %i[show edit update destroy toggle]
 
   def index
-    @tasks = Task.order(completed_at: :asc, complete_by: :asc)
+    @filter = FILTERS.include?(params[:filter]) ? params[:filter] : "all"
+    @query = params[:q].to_s.strip
+    @counts = filter_counts
+
+    scope = filtered_scope(@filter).by_deadline
+    scope = scope.search(@query) if @query.present?
+
+    # Simple, dependency-free pagination.
+    @per_page = PER_PAGE
+    @total_count = scope.count
+    @total_pages = [ (@total_count.to_f / @per_page).ceil, 1 ].max
+    @page = params[:page].to_i.clamp(1, @total_pages)
+    @tasks = scope.offset((@page - 1) * @per_page).limit(@per_page)
+    @list_payload = list_payload
+
+    respond_to do |format|
+      format.html
+      format.json { render json: @list_payload }
+    end
   end
 
   def show
@@ -53,6 +74,41 @@ class TasksController < ApplicationController
   end
 
   private
+
+  # Everything the Vue list needs to render one page of results.
+  def list_payload
+    {
+      tasks: @tasks.map { |task| helpers.task_payload(task) },
+      filter: @filter,
+      query: @query,
+      counts: @counts,
+      page: @page,
+      total_pages: @total_pages,
+      total_count: @total_count,
+      per_page: @per_page
+    }
+  end
+
+  def filtered_scope(filter)
+    case filter
+    when "today"     then Task.due_by_end_of_today
+    when "overdue"   then Task.overdue
+    when "pending"   then Task.pending
+    when "completed" then Task.completed
+    else Task.all
+    end
+  end
+
+  # Totals per filter for the tab badges (independent of the current search).
+  def filter_counts
+    {
+      "all" => Task.count,
+      "today" => Task.due_by_end_of_today.count,
+      "overdue" => Task.overdue.count,
+      "pending" => Task.pending.count,
+      "completed" => Task.completed.count
+    }
+  end
 
   def set_task
     @task = Task.find(params[:id])

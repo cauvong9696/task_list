@@ -141,14 +141,49 @@ textarea {
   color: #fff;
   border-color: var(--accent);
 }
+.filters a {
+  display: inline-block;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.filters a.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.search-form { flex: 1; min-width: 12rem; }
 .search {
-  flex: 1;
-  min-width: 12rem;
+  width: 100%;
   padding: 0.45rem 0.6rem;
   border: 1px solid var(--border);
   border-radius: 6px;
   font: inherit;
 }
+.result-count { color: var(--muted); font-size: 0.9rem; margin: 0 0 0.5rem; }
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.pagination button {
+  background: #fff;
+  color: var(--accent);
+  border-color: var(--border);
+}
+.pagination button:disabled { color: var(--border); cursor: not-allowed; }
+.pagination .disabled { color: var(--border); }
+.pagination .page-info { color: var(--muted); font-size: 0.9rem; }
+
+/* Dim the list briefly while a fetch is in flight. */
+.task-list.loading { opacity: 0.6; transition: opacity 0.1s ease; }
 
 /* Task list */
 .task-list { list-style: none; padding: 0; margin: 0; }
@@ -159,7 +194,26 @@ textarea {
   padding: 0.85rem 0;
   border-bottom: 1px solid var(--border);
 }
-.task input[type="checkbox"] { margin-top: 0.35rem; width: 1.1rem; height: 1.1rem; }
+.task-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+.task-toggle input { width: 1rem; height: 1rem; cursor: pointer; }
+.task-toggle.done {
+  color: var(--done);
+  border-color: var(--done);
+  font-weight: 600;
+}
 .task-body { flex: 1; min-width: 0; }
 .task-title { font-weight: 600; text-decoration: none; }
 .task.completed .task-title { text-decoration: line-through; color: var(--muted); }
@@ -168,6 +222,5 @@ textarea {
 .task-actions { display: flex; gap: 0.75rem; align-items: center; white-space: nowrap; }
 
 .badge-overdue { color: var(--overdue); font-weight: 600; }
-.badge-done { color: var(--done); font-weight: 600; }
 
 .empty { color: var(--muted); padding: 1rem 0; }

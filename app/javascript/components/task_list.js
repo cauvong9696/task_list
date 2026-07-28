@@ -97,6 +97,7 @@ const TaskList = {
           </div>
           <div class="task-actions">
             <a :href="'/tasks/' + task.id + '/edit'">Edit</a>
+            <a :href="'/tasks/new?copy_from=' + task.id" class="link-action">Copy</a>
             <button type="button" class="link-danger" @click="destroy(task)">Delete</button>
           </div>
         </li>

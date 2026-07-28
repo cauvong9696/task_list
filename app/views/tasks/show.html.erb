@@ -23,6 +23,7 @@
   <div class="actions">
     <%= button_to @task.completed? ? "Mark as pending" : "Mark as complete", toggle_task_path(@task), method: :patch %>
     <%= link_to "Edit", edit_task_path(@task), class: "button" %>
+    <%= link_to "Copy", new_task_path(copy_from: @task), class: "button" %>
     <%= button_to "Delete", @task, method: :delete, data: { turbo_confirm: "Delete this task?" }, class: "button-danger" %>
   </div>
 </div>

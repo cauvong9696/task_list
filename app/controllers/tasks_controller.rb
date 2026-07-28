@@ -10,6 +10,14 @@ class TasksController < ApplicationController
 
   def new
     @task = Task.new
+
+    # "Copy" opens this form pre-filled from an existing task; nothing is saved
+    # until the user submits.
+    if (source = Task.find_by(id: params[:copy_from]))
+      @task.title = "#{source.title} (copy)"
+      @task.description = source.description
+      @task.complete_by = source.complete_by
+    end
   end
 
   def create

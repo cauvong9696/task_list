@@ -54,6 +54,21 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_not @task.reload.completed?
   end
 
+  test "copy opens a prefilled new form without saving" do
+    source = tasks(:done)
+    assert_no_difference("Task.count") do
+      get new_task_url(copy_from: source)
+    end
+    assert_response :success
+    assert_select "#task-form-app[data-title=?]", "#{source.title} (copy)"
+  end
+
+  test "new ignores an unknown copy_from id" do
+    get new_task_url(copy_from: 0)
+    assert_response :success
+    assert_select "#task-form-app[data-title='']"
+  end
+
   test "destroys a task" do
     assert_difference("Task.count", -1) do
       delete task_url(@task)

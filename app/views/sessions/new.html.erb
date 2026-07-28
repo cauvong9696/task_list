@@ -1,0 +1,21 @@
+<% content_for :title, "Sign in" %>
+
+<header class="page-header">
+  <h1>Sign in</h1>
+</header>
+
+<%= form_with url: login_path, method: :post, class: "card" do |form| %>
+  <div class="field">
+    <%= form.label :email %>
+    <%= form.email_field :email, autofocus: true, autocomplete: "username" %>
+  </div>
+
+  <div class="field">
+    <%= form.label :password %>
+    <%= form.password_field :password, autocomplete: "current-password" %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit "Sign in" %>
+  </div>
+<% end %>

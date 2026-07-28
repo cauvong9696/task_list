@@ -25,6 +25,7 @@
     <% end %>
   </div>
   <p><strong>Complete by:</strong> <%= @task.complete_by.strftime("%b %-d, %Y at %I:%M %p") %></p>
+  <p><strong>Author:</strong> <%= @task.user.email %></p>
   <p><strong>Created:</strong> <%= @task.created_at.strftime("%b %-d, %Y at %I:%M %p") %></p>
 
   <div>

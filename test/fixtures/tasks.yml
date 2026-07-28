@@ -1,15 +1,23 @@
 pending_future:
+  user: alice
   title: Ship the quarterly report
   description: Compile figures and send to the board.
   complete_by: <%= 3.days.from_now %>
 
 overdue:
+  user: alice
   title: Renew the domain
   description: Registration lapses soon.
   complete_by: <%= 2.days.ago %>
 
 done:
+  user: alice
   title: Book the venue
   description: Confirmed with the caterer.
   complete_by: <%= 1.day.from_now %>
   completed_at: <%= 1.hour.ago %>
+
+bob_task:
+  user: bob
+  title: Bob's private task
+  complete_by: <%= 1.day.from_now %>

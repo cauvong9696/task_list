@@ -3,7 +3,51 @@ require "test_helper"
 class TasksControllerTest < ActionDispatch::IntegrationTest
   include ActiveJob::TestHelper
 
-  setup { @task = tasks(:pending_future) }
+  setup do
+    @user = users(:alice)
+    sign_in_as(@user)
+    @task = tasks(:pending_future)
+  end
+
+  test "index requires authentication" do
+    reset_session_for_test
+    get tasks_url
+    assert_redirected_to login_url
+  end
+
+  test "index only shows the current user's tasks" do
+    get tasks_url
+    assert_includes rendered_task_ids, tasks(:pending_future).id
+    assert_not_includes rendered_task_ids, tasks(:bob_task).id
+  end
+
+  test "cannot access another user's task" do
+    get task_url(tasks(:bob_task))
+    assert_redirected_to tasks_url
+  end
+
+  test "admin sees every user's tasks" do
+    sign_in_as(users(:admin))
+    get tasks_url
+    ids = rendered_task_ids
+    assert_includes ids, tasks(:pending_future).id # alice's
+    assert_includes ids, tasks(:bob_task).id       # bob's
+  end
+
+  test "admin can open any user's task" do
+    sign_in_as(users(:admin))
+    get task_url(tasks(:bob_task))
+    assert_response :success
+    assert_select "h1", tasks(:bob_task).title
+  end
+
+  test "admin can delete another user's task" do
+    sign_in_as(users(:admin))
+    assert_difference("Task.count", -1) do
+      delete task_url(tasks(:bob_task))
+    end
+    assert_redirected_to tasks_url
+  end
 
   test "index lists tasks" do
     get tasks_url
@@ -25,7 +69,7 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "today filter limits to tasks due by end of today (including overdue)" do
-    due_today = Task.create!(title: "Due today", complete_by: Time.current.end_of_day - 1.hour)
+    due_today = @user.tasks.create!(title: "Due today", complete_by: Time.current.end_of_day - 1.hour)
     get tasks_url(filter: "today")
     ids = rendered_task_ids
     assert_includes ids, due_today.id
@@ -39,7 +83,7 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index paginates results" do
-    15.times { |i| Task.create!(title: "Extra #{i}", complete_by: (i + 10).days.from_now) }
+    15.times { |i| @user.tasks.create!(title: "Extra #{i}", complete_by: (i + 10).days.from_now) }
     get tasks_url
     assert_equal TasksController::PER_PAGE, rendered_task_ids.size
     assert_operator rendered_initial["total_pages"], :>, 1
@@ -84,10 +128,11 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
-  test "show renders a task" do
+  test "show renders a task with its author" do
     get task_url(@task)
     assert_response :success
     assert_select "h1", @task.title
+    assert_select "p", /Author:.*#{Regexp.escape(@task.user.email)}/m
   end
 
   test "show renders the description as Markdown" do
@@ -192,6 +237,14 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+  def sign_in_as(user, password: "password")
+    post login_url, params: { email: user.email, password: password }
+  end
+
+  def reset_session_for_test
+    delete logout_url
+  end
 
   def attach_file(task, filename)
     task.supporting_files.attach(

@@ -25,6 +25,13 @@
 
   <body>
     <main class="container">
+      <% if logged_in? %>
+        <div class="account-bar">
+          <span class="muted"><%= current_user.email %></span>
+          <% if current_user.admin? %><span class="badge-admin">admin</span><% end %>
+          <%= button_to "Sign out", logout_path, method: :delete, class: "link-action" %>
+        </div>
+      <% end %>
       <% if notice %><p class="flash flash-notice"><%= notice %></p><% end %>
       <% if alert %><p class="flash flash-alert"><%= alert %></p><% end %>
       <%= yield %>
